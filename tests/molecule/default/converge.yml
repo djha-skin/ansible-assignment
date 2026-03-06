@@ -1,0 +1,70 @@
+---
+- name: Converge
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Test ultradns_timing_stats module
+      ultradns_timing_stats:
+        log_file: /var/log/ultradns-quiz-madeup.log
+      register: timing_result
+
+    - name: Display timing results
+      debug:
+        var: timing_result
+
+    - name: Validate module returned expected keys
+      assert:
+        that:
+          - timing_result is defined
+          - timing_result.timing_values is defined
+          - timing_result.timing_values is iterable
+          - timing_result.mean is defined
+          - timing_result.mean >= 0
+          - timing_result.std_dev is defined
+          - timing_result.std_dev >= 0
+          - timing_result.count is defined
+          - timing_result.count > 0
+        fail_msg: "Module did not return expected keys or values"
+        success_msg: "Module returned valid timing statistics"
+
+    - name: Validate we found timing entries
+      assert:
+        that:
+          - timing_result.count > 0
+        fail_msg: "No timing entries found in log file"
+        success_msg: "Found {{ timing_result.count }} timing entries"
+
+    - name: Validate mean is reasonable (between 0 and 10000 ms)
+      assert:
+        that:
+          - timing_result.mean | float < 10000
+          - timing_result.mean | float > 0
+        fail_msg: "Mean timing value is outside expected range"
+        success_msg: "Mean timing value is reasonable: {{ timing_result.mean }} ms"
+
+    - name: Validate std_dev is reasonable (between 0 and 10000 ms)
+      assert:
+        that:
+          - timing_result.std_dev | float < 10000
+          - timing_result.std_dev | float >= 0
+        fail_msg: "Standard deviation is outside expected range"
+        success_msg: "Standard deviation is reasonable: {{ timing_result.std_dev }} ms"
+
+    - name: Store results for verification
+      set_fact:
+        test_results:
+          count: "{{ timing_result.count }}"
+          mean: "{{ timing_result.mean }}"
+          std_dev: "{{ timing_result.std_dev }}"
+          timing_values: "{{ timing_result.timing_values }}"
+
+    - name: Display final test summary
+      debug:
+        msg:
+          - "=== UltraDNS Timing Stats Module Test Results ==="
+          - "Count: {{ timing_result.count }} entries"
+          - "Mean: {{ timing_result.mean }} ms"
+          - "Std Dev: {{ timing_result.std_dev }} ms"
+          - "Timing Values: {{ timing_result.timing_values }}"
+          - "=============================================="

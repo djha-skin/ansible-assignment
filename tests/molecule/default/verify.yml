@@ -1,0 +1,68 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Verify module output structure
+      assert:
+        that:
+          - test_results is defined
+          - test_results.count is defined
+          - test_results.mean is defined
+          - test_results.std_dev is defined
+          - test_results.timing_values is defined
+        fail_msg: "Test results not properly structured"
+        success_msg: "Test results structure verified"
+
+    - name: Verify count matches expected number of timing entries
+      assert:
+        that:
+          - test_results.count == test_results.timing_values | length
+        fail_msg: "Count does not match number of timing values"
+        success_msg: "Count matches timing values length: {{ test_results.count }}"
+
+    - name: Verify mean calculation is correct
+      assert:
+        that:
+          - (test_results.timing_values | sum) / test_results.timing_values | length | float == test_results.mean | float
+        fail_msg: "Mean calculation is incorrect"
+        success_msg: "Mean calculation verified: {{ test_results.mean }} ms"
+
+    - name: Verify all timing values are positive
+      assert:
+        that:
+          - item > 0
+        loop: "{{ test_results.timing_values }}"
+        fail_msg: "Found non-positive timing value: {{ item }}"
+        success_msg: "All {{ test_results.count }} timing values are positive"
+
+    - name: Verify std_dev calculation is reasonable
+      assert:
+        that:
+          - test_results.std_dev | float >= 0
+          - test_results.std_dev | float <= test_results.mean | float * 2
+        fail_msg: "Standard deviation seems incorrect"
+        success_msg: "Standard deviation is reasonable: {{ test_results.std_dev }} ms"
+
+    - name: Verify timing values are within expected range
+      assert:
+        that:
+          - item | int >= 0
+          - item | int <= 10000
+        loop: "{{ test_results.timing_values }}"
+        fail_msg: "Timing value {{ item }} is outside expected range"
+        success_msg: "All timing values are within expected range (0-10000 ms)"
+
+    - name: Display verification summary
+      debug:
+        msg:
+          - "=== Verification Complete ==="
+          - "All tests passed successfully!"
+          - "Module correctly:"
+          - "  - Parsed log file at /var/log/ultradns-quiz-madeup.log"
+          - "  - Extracted {{ test_results.count }} timing entries"
+          - "  - Calculated mean: {{ test_results.mean }} ms"
+          - "  - Calculated std dev: {{ test_results.std_dev }} ms"
+          - "  - Returned valid timing values"
+          - "==========================="
