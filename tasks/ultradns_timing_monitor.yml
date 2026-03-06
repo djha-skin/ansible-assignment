@@ -7,7 +7,7 @@
   hosts: quiz_servers
   gather_facts: yes
   become: yes
-  
+
   tasks:
     - name: Collect timing statistics from UltraDNS quiz application logs
       ultradns_timing_stats:
@@ -62,7 +62,7 @@
   connection: local
   gather_facts: no
   run_once: true
-  
+
   tasks:
     - name: Display summary header
       debug:

@@ -38,7 +38,7 @@ EXAMPLES = r'''
 - name: Get UltraDNS timing statistics
   ultradns_timing_stats:
     log_file: /var/log/ultradns-quiz-madeup.log
-    
+
 # Analyze the last 50 timing entries
 - name: Get UltraDNS timing statistics with larger sample
   ultradns_timing_stats:
@@ -83,22 +83,22 @@ from ansible.module_utils.basic import AnsibleModule
 def extract_timings(log_file, sample_size):
     """
     Extract timing values from the log file.
-    
+
     Searches for lines matching the pattern:
     [YYYY-MM-DD HH:MM:SS,mmm] INFO Ultradns quiz application took XX ms
-    
+
     Args:
         log_file: Path to the log file
         sample_size: Number of most recent entries to return
-        
+
     Returns:
         List of timing values (as integers) in chronological order
     """
     # Pattern to match: [timestamp] INFO Ultradns quiz application took XX ms
     pattern = re.compile(r'\[[\d\-: ,]+\]\s+INFO\s+Ultradns quiz application took\s+(\d+)\s+ms')
-    
+
     timings = []
-    
+
     try:
         with open(log_file, 'r') as f:
             for line in f:
@@ -108,7 +108,7 @@ def extract_timings(log_file, sample_size):
                     timings.append(timing_value)
     except IOError as e:
         raise IOError(f"Failed to read log file {log_file}: {str(e)}")
-    
+
     # Return the last N entries
     return timings[-sample_size:] if len(timings) > sample_size else timings
 
@@ -116,16 +116,16 @@ def extract_timings(log_file, sample_size):
 def calculate_mean(numbers):
     """
     Calculate the arithmetic mean of a list of numbers.
-    
+
     Args:
         numbers: List of numeric values
-        
+
     Returns:
         The mean as a float
     """
     if not numbers:
         return 0.0
-    
+
     total = sum(numbers)
     return float(total) / len(numbers)
 
@@ -133,23 +133,23 @@ def calculate_mean(numbers):
 def calculate_stddev(numbers, mean):
     """
     Calculate the standard deviation of a list of numbers.
-    
+
     Uses the formula: sqrt(sum((x - mean)^2) / n)
-    
+
     Args:
         numbers: List of numeric values
         mean: The pre-calculated mean of the numbers
-        
+
     Returns:
         The standard deviation as a float
     """
     if not numbers:
         return 0.0
-    
+
     sum_of_squares = 0.0
     for number in numbers:
         sum_of_squares += (number - mean) ** 2
-    
+
     return math.sqrt(sum_of_squares / len(numbers))
 
 
@@ -190,28 +190,28 @@ def run_module():
     try:
         # Extract timing values from the log file
         timings = extract_timings(log_file, sample_size)
-        
+
         # Check if we found any timing entries
         if not timings:
             module.fail_json(
                 msg=f'No timing entries found in log file {log_file}',
                 **result
             )
-        
+
         # Calculate statistics
         mean = calculate_mean(timings)
         stddev = calculate_stddev(timings, mean)
-        
+
         # Populate result
         result['mean'] = mean
         result['stddev'] = stddev
         result['sample_count'] = len(timings)
         result['timings'] = timings
         result['log_file'] = log_file
-        
+
         # Module succeeded
         module.exit_json(**result)
-        
+
     except IOError as e:
         module.fail_json(msg=str(e), **result)
     except Exception as e:

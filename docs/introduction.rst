@@ -39,7 +39,7 @@ Architecture
 The solution consists of three main components:
 
 1. **Custom Ansible Module** (`ultradns_timing_stats`)
-   
+
    Parses log files and extracts timing statistics. The module:
    - Reads the specified log file
    - Extracts all timing entries matching the expected pattern
@@ -48,7 +48,7 @@ The solution consists of three main components:
    - Returns structured data for further processing
 
 2. **Ansible Playbook** (`ultradns_timing_monitor.yml`)
-   
+
    Automates the collection and analysis of timing statistics across multiple
    servers. The playbook:
    - Targets all quiz.example.vercara servers
@@ -58,7 +58,7 @@ The solution consists of three main components:
    - Generates summary reports
 
 3. **Sphinx Documentation**
-   
+
    Comprehensive documentation for the module and playbook, including:
    - API reference
    - Usage examples

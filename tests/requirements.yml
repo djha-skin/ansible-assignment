@@ -1,6 +1,0 @@
----
-collections:
-  - name: community.general
-    version: ">=7.0.0"
-
-roles: []

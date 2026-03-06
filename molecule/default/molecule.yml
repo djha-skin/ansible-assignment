@@ -16,9 +16,19 @@ provisioner:
     converge: ${MOLECULE_PLAYBOOK:-converge.yml}
     verify: ${MOLECULE_VERIFY:-verify.yml}
   inventory:
-    hosts:
-      ansible-test:
+    group_vars:
+      all:
         ansible_connection: docker
         ansible_user: root
+    hosts:
+      all:
+        hosts:
+          ansible-test: {}
+  config_options:
+    defaults:
+      library: ../library
 verifier:
   name: ansible
+  config_options:
+    defaults:
+      library: ../library
