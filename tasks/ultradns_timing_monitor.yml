@@ -1,0 +1,100 @@
+---
+# Ansible playbook to gather UltraDNS timing statistics from quiz servers
+# This playbook uses the custom ultradns_timing_stats module to analyze
+# application performance across all quiz.example.vercara servers
+
+- name: Gather UltraDNS Quiz Application Timing Statistics
+  hosts: quiz_servers
+  gather_facts: yes
+  become: yes
+  
+  tasks:
+    - name: Collect timing statistics from UltraDNS quiz application logs
+      ultradns_timing_stats:
+        log_file: /var/log/ultradns-quiz-madeup.log
+        sample_size: 20
+      register: timing_stats
+      tags:
+        - timing
+        - monitoring
+
+    - name: Display timing statistics
+      debug:
+        msg: |
+          Server: {{ inventory_hostname }}
+          Log File: {{ timing_stats.log_file }}
+          Sample Count: {{ timing_stats.sample_count }}
+          Mean Response Time: {{ timing_stats.mean | round(2) }} ms
+          Standard Deviation: {{ timing_stats.stddev | round(2) }} ms
+      tags:
+        - timing
+        - monitoring
+
+    - name: Store timing statistics in host facts
+      set_fact:
+        ultradns_timing_mean: "{{ timing_stats.mean }}"
+        ultradns_timing_stddev: "{{ timing_stats.stddev }}"
+        ultradns_timing_sample_count: "{{ timing_stats.sample_count }}"
+      tags:
+        - timing
+        - monitoring
+
+    - name: Alert on high mean response time
+      debug:
+        msg: "WARNING: High mean response time ({{ timing_stats.mean | round(2) }} ms) on {{ inventory_hostname }}"
+      when: timing_stats.mean > 150
+      tags:
+        - timing
+        - monitoring
+        - alert
+
+    - name: Alert on high standard deviation
+      debug:
+        msg: "WARNING: High variability in response times (stddev: {{ timing_stats.stddev | round(2) }} ms) on {{ inventory_hostname }}"
+      when: timing_stats.stddev > 50
+      tags:
+        - timing
+        - monitoring
+        - alert
+
+- name: Summary Report
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  run_once: true
+  
+  tasks:
+    - name: Display summary header
+      debug:
+        msg: "\n=== UltraDNS Quiz Application Timing Summary ==="
+      tags:
+        - summary
+
+    - name: Aggregate timing statistics
+      aggregate:
+        aggregate:
+          - host: "{{ item }}"
+            value: "{{ hostvars[item].ultradns_timing_mean | default(0) }}"
+        attribute: ultradns_timing_mean
+      loop: "{{ groups['quiz_servers'] }}"
+      register: aggregated_stats
+      tags:
+        - summary
+
+    - name: Calculate overall statistics
+      set_fact:
+        overall_mean: "{{ (aggregated_stats.agg.ultradns_timing_mean | sum) / (aggregated_stats.agg.ultradns_timing_mean | length) }}"
+        max_mean: "{{ aggregated_stats.agg.ultradns_timing_mean | max }}"
+        min_mean: "{{ aggregated_stats.agg.ultradns_timing_mean | min }}"
+      tags:
+        - summary
+
+    - name: Display overall statistics
+      debug:
+        msg: |
+          Overall Mean Response Time: {{ overall_mean | round(2) }} ms
+          Maximum Mean: {{ max_mean | round(2) }} ms
+          Minimum Mean: {{ min_mean | round(2) }} ms
+          Servers Analyzed: {{ aggregated_stats.agg.ultradns_timing_mean | length }}
+      tags:
+        - summary
