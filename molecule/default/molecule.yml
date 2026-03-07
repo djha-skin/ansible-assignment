@@ -26,9 +26,9 @@ provisioner:
           ansible-test: {}
   config_options:
     defaults:
-      library: ../library
+      library: ../../library
 verifier:
   name: ansible
   config_options:
     defaults:
-      library: ../library
+      library: ../../library

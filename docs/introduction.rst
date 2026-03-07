@@ -71,8 +71,3 @@ Requirements
 - Python 3.6+
 - Ansible 2.9+
 - Sphinx 4.0+ (for building documentation)
-
-Installation
-------------
-
-See the :doc:`usage` documentation for detailed installation instructions.

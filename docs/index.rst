@@ -14,7 +14,6 @@ Table of Contents
 
    introduction
    module
-   usage
    playbook
 
 Indices and tables
