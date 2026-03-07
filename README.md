@@ -125,10 +125,6 @@ The workflow:
 4. Builds the documentation
 5. Deploys to GitHub Pages
 
-## License
-
-This project is licensed under the GNU General Public License v3.0.
-
 ## Author
 
 Daniel Haskin
