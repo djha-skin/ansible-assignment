@@ -1,34 +1,30 @@
 ---
 dependency:
   name: galaxy
+
 driver:
   name: docker
+
 platforms:
   - name: ansible-test
     image: "geerlingguy/ansible:latest"
     volumes:
       - /home/dhaskin/madeup.log:/var/log/ultradns-quiz-madeup.log:ro
     privileged: true
-    pre_build_image: true
+    cgroupns_mode: "host"
+
 provisioner:
   name: ansible
   playbooks:
-    converge: ${MOLECULE_PLAYBOOK:-converge.yml}
-    verify: ${MOLECULE_VERIFY:-verify.yml}
+    converge: converge.yml
+    verify: verify.yml
   inventory:
     group_vars:
       all:
         ansible_connection: docker
         ansible_user: root
-    hosts:
-      all:
-        hosts:
-          ansible-test: {}
-  config_options:
-    defaults:
-      library: ../../library
+    host_vars:
+      ansible-test: {}
+
 verifier:
   name: ansible
-  config_options:
-    defaults:
-      library: ../../library

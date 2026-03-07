@@ -5,8 +5,8 @@
 
 - name: Gather UltraDNS Quiz Application Timing Statistics
   hosts: quiz_servers
-  gather_facts: yes
-  become: yes
+  gather_facts: true
+  become: true
 
   tasks:
     - name: Collect timing statistics from UltraDNS quiz application logs
